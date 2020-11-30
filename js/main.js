@@ -44,7 +44,8 @@
             sliderTime: 0,
             sliderArr: [],
             storeIndex: 0,
-            stopBtn: false
+            stopBtn: false,
+            speakSpeed: 1
         },
 
         // Layout
@@ -215,7 +216,7 @@
             else if (btn && field.classList.contains('timer-field') && btn.classList.contains('btn-plus')) {
 
                 // Insert Value
-                txtReader.arrowsInsertVal(true, field, 0.5, 0.5, 1000);
+                txtReader.arrowsInsertVal(true, field, 0.5, 0.1, 1000);
                 txtReader.status.curArrow = ['time', 'plus'];
 
             }
@@ -224,7 +225,7 @@
             else if (btn && field.classList.contains('timer-field') && btn.classList.contains('btn-minus')) {
 
                 // Insert Value
-                txtReader.arrowsInsertVal(false, field, 0.5, 0.5, 1000);
+                txtReader.arrowsInsertVal(false, field, 0.5, 0.1, 1000);
                 txtReader.status.curArrow = ['time', 'minus'];
 
             }
@@ -240,14 +241,24 @@
                 counter = 1;
             }
 
-            if (status && val < max) { // Plus
+            if (val <= 0.5 && !status || val < 0.5 && status) {
+                counter = 0.1;
+            }
 
-                valTxt.textContent = val + counter;
+            if (status && val < max) { // Plus
+                let valNum = val + counter;
+                if (counter <= 0.5) {
+                    valNum = Number(valNum.toFixed(2));
+                }
+                valTxt.textContent = valNum;
                 txtReader.changeArrowOption(field, valTxt);
 
             } else if (!status && val > min) { // Minus
-
-                valTxt.textContent = val - counter;
+                let valNum = val - counter;
+                if (counter <= 0.5) {
+                    valNum = Number(valNum.toFixed(2));
+                }
+                valTxt.textContent = valNum;
                 txtReader.changeArrowOption(field, valTxt);
 
             }
@@ -408,6 +419,13 @@
 
             // Check if stop button clicked
             if (!this.status.stopBtn) {
+                let medNum;
+                if (this.status.resetWordsArr.length > 2) {
+                    medNum = this.status.resetWordsArr[this.status.resetWordsArr.length - 1][0] - this.status.resetWordsArr[this.status.resetWordsArr.length - 2][0];
+                    // Calculate speak speed
+                    this.calculateSpeakSpeed(medNum);
+                }                
+
                 // Call Insert function
                 this.insertWordsFun();
             }
@@ -529,6 +547,7 @@
             //return false;
             if (word) {
                 wordDisplay.innerHTML = word;
+                txtReader.SpeakWord();
             }
 
             // Continue animation
@@ -584,9 +603,13 @@
         // Speak Word Callback
         SpeakWord: function() {
             let word = wordDisplay.textContent;
-            
-            // Do something
-            console.log(word);
+            // Check if speak btn active
+            if (speakBtn.classList.contains('active')) {
+                // Speak
+                let utterance = new SpeechSynthesisUtterance(word);
+                utterance.rate = txtReader.status.speakSpeed;
+                speechSynthesis.speak(utterance);
+            }
 
         },
 
@@ -610,6 +633,31 @@
 
             }
 
+        },
+
+        // Get Speak Speed
+        calculateSpeakSpeed: function(num) {
+            if (num <= 300 && num > 250) {
+                txtReader.status.speakSpeed = 1.5;
+            } else if (num <= 250 && num > 150) {
+                txtReader.status.speakSpeed = 2;
+            } else if (num <= 150 && num > 120) {
+                txtReader.status.speakSpeed = 2.5;
+            } else if (num <= 120 && num > 100) {
+                txtReader.status.speakSpeed = 3;
+            } else if (num <= 100 && num > 90) {
+                txtReader.status.speakSpeed = 4;
+            } else if (num <= 90 && num > 80) {
+                txtReader.status.speakSpeed = 4.5;
+            } else if (num <= 80 && num > 70) {
+                txtReader.status.speakSpeed = 5;
+            } else if (num <= 70 && num > 60) {
+                txtReader.status.speakSpeed = 6;
+            } else if (num <= 60 && num > 50) {
+                txtReader.status.speakSpeed = 8;
+            } else if (num <= 50){
+                txtReader.status.speakSpeed = 10;
+            }
         },
 
         // Init
