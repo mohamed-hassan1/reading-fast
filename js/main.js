@@ -270,6 +270,7 @@
             if (field.classList.contains('wordcount-field')) {
                 // Chunk size
                 txtReader.status.chunkSize = Number(valTxt.textContent);
+		arrowGroup.querySelector('.wpm-field .word-speed').textContent = 'x' + valTxt.textContent;
             } else if (field.classList.contains('timer-field')) {
                 // timer
                 txtReader.status.timer = 6000 * Number(valTxt.textContent);
