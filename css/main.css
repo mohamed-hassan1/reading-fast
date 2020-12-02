@@ -262,13 +262,17 @@ body {
 }
 
 .main-section .btm-options {
-	display: none;
-}
-
-.main-section .btm-options.active {
 	display: flex;
 	align-items: center;
+	justify-content: center;
+}
+.main-section .btm-options.active {
 	justify-content: space-between;
+}
+
+.main-section .btm-options:not(.active) .timer,
+.main-section .btm-options:not(.active) .stop-btn {
+	display: none;
 }
 
 .main-section .btm-options .speak-btn {
@@ -347,8 +351,15 @@ body {
 	height: 92px;
     overflow-y: auto;
 	transition: all 0.2s ease-in-out;
-
 }
+
+input, input:before, input:after {
+	-webkit-user-select: initial;
+	-khtml-user-select: initial;
+	-moz-user-select: initial;
+	-ms-user-select: initial;
+	user-select: initial;
+} 
 
 .main-section .sound-select.active .drop-list {
 	display: block;

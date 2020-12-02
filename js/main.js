@@ -30,7 +30,7 @@
             letterTimer: 0,
             startAnim: false,
             chunkSize: 1,
-            wpm: 1,
+            wpm: 350,
             activeArrow: false,
             currTime: 0,
             currIndex: 0,
@@ -79,17 +79,18 @@
                 }
             });
 
+
             // Set WPM input value
-            wordNum.value = 1;
+            wordNum.value = txtReader.status.wpm;
 
             // On type
             inputTxt.addEventListener('input', this.splitTxt);
 
-            // On arrow click
-            arrowGroup.addEventListener('click', this.arrowFun);
-
             // On WPM input type
             wordNum.addEventListener('input', this.wpmInputFun);
+
+            // On arrow click
+            arrowGroup.addEventListener('click', this.arrowFun);
 
             // On click on Start btn
             startBtn.addEventListener('click', this.startAnimation);
@@ -111,26 +112,27 @@
                 txt = val.replace(/\n/g, ' ').split(' ');
 
             if (val !== '' && txt.length > 1) {
+
                 txtReader.status.fword = txt.slice(0, txtReader.status.chunkSize).join('').length;
 
                 txt = txt.join(' ');
 
                 // Save letters number
-                txtReader.status.lettersNum = txt.replaceAll(' ', '').length;
+                txtReader.status.lettersNum = txt.split(' ').join('').length;
 
                 let arr = txt.split(' '),
                     newArr = [],
                     index = 0;
                 
                 // filter & push the valid words into new array
-                arr.filter((word) => {
+                arr.filter(function(word) {
                     if (word.length === 1 && word != 'a') {
                         let num = txtReader.getArrPrevTxt(arr, index);
                         arr[index - num] = arr[index - num] + arr[index];
                     }
                     index++;
                 });
-                arr.filter((word) => {
+                arr.filter(function(word) {
                     if (word.length > 1) {
                         newArr.push(word);
                     }
@@ -138,17 +140,17 @@
 
                 // Set WPM input value
                 wordNum.value = newArr.length;
+                txtReader.status.wpm = newArr.length;
 
                 // Store values
                 txtReader.status.txtSplit = newArr;
-                txtReader.status.wpm = newArr.length;
                 txtReader.status.wordNum = newArr.length;
                 txtReader.status.timer = (6000 * txtReader.status.storeTimePlay);
                 txtReader.status.letterTimer = txtReader.status.timer / (txtReader.status.lettersNum - txtReader.status.fword);
 
                 // Calculate play time
                 txtReader.wpmPlayTime();
-                
+                                    
                 // active / disable start button
                 if (newArr.length > 1 && startBtn.classList.contains('disabled')) {
                     startBtn.classList.remove('disabled');
@@ -158,6 +160,8 @@
 
                 return newArr;
 
+            } else {
+                startBtn.classList.add('disabled');
             }
         },
 
@@ -175,7 +179,7 @@
         
         // Highlight middle letter
         highlightTxt: function(txt) {
-            let getTxt    = txt.replaceAll(' ', ''),
+            let getTxt    = txt.split(' ').join(''),
                 word      = '',
                 counter   = 1,
                 done      = false,
@@ -366,15 +370,15 @@
             }
 
             // Filter value
-            if (/^\d+$/g.test(this.value)) {
+            if (/^\d+$/g.test(wordNum.value)) {
                 // Store WPM value
                 txtReader.status.wpm = Number(wordNum.value);
                 // Calculate play time
                 txtReader.wpmPlayTime();
-            } else if (this.value.trim() !== '' || this.value != 0) {
-                this.value = this.value.slice(0, this.value.length - 1);
+            } else if (wordNum.value.trim() !== '' || wordNum.value != 0) {
+                wordNum.value = wordNum.value.slice(0, wordNum.value.length - 1);
             } else {
-                this.value = 1;
+                wordNum.value = 1;
                 txtReader.status.wpm = 1;
                 // Calculate play time
                 txtReader.wpmPlayTime();
@@ -390,6 +394,8 @@
             if (num2 !== 0) {
                 num = num.toFixed(1);
             }
+
+            wordNum.classList.add('active');
 
             if (num == 0) {
                 num = 6;
@@ -432,12 +438,13 @@
                     });
                     $(slider).closest('.slider-group').fadeIn('fast');
                     $(btmOptions).addClass('active');
-                    txtReader.status.startAnim = true;
                     txtReader.status.activeArrow = false;
                     txtReader.status.stopAnim = false;
+                    //txtReader.wpmInputFun();
                     //txtReader.splitTxt();
+                    txtReader.status.startAnim = true;
                     // Call Animation function
-                    txtReader.getWords(true);
+                    txtReader.getWords();
                 });
             }
 
@@ -451,7 +458,6 @@
                 counterTime = 0,
                 counterWord = 0,
                 timer, newSec, newMin, wordTime, mergeWord, word, wordIndex;
-
 
             this.status.resetWordsArr = [];
             this.status.newIndex = 0;
@@ -522,7 +528,6 @@
 
             // On click on arrows
             if (this.status.activeArrow) {
-
                 this.status.activeArrow = false;
                 this.status.wpmInput = false;
                 // Get previous word & time
@@ -548,7 +553,6 @@
 
             this.status.newTxtSplit = arr;
             this.status.sliderTime = this.status.currTime;
-
             // Check if stop button clicked
             if (!this.status.stopBtn) {
                 let medNum;
@@ -557,7 +561,7 @@
                     // Calculate speak speed
                     this.calculateSpeakSpeed(medNum);
                 }                
-
+                
                 // Call Insert function
                 this.insertWordsFun();
             }
@@ -598,14 +602,12 @@
                 arr2.push(this.status.newIndex);
                 this.status.newIndex += 1; 
             }
-            
             arr = [word, wordLen, arr2];
             return arr;
         },
 
         // Insert Words
         insertWordsFun: function() {
-
             let anim = setInterval(frame, 10),
                 sliderStep = 100 / txtReader.status.timer,
                 sliderCounter = txtReader.status.sliderTime * sliderStep;
@@ -638,6 +640,7 @@
                     sliderCounter += sliderStep;
 
                 } else {
+                    
                     // Options arrows clicked
                     if (txtReader.status.wpmInput || txtReader.status.stopAnim && txtReader.status.activeArrow) {
                         
@@ -658,12 +661,15 @@
                             // Reset Time
                             txtReader.status.resetTime = true;
                         }
+                        // Get words ready
                         txtReader.getWords();
                     }
+                    
                     // Replay btn
                     if (txtReader.status.currTime >= txtReader.status.timer) {
                         txtReader.replayFun();
                     }
+
                     // Stop Animation
                     clearInterval(anim);
                 }
