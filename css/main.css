@@ -231,7 +231,7 @@ body {
 }
 
 .main-section .form-group.arrow-group > div:not(:last-child) {
-    margin-right: 60px;
+    margin-right: 50px;
 }
 
 .main-section .form-group .field-txt {
@@ -285,6 +285,31 @@ body {
 
 .main-section .btm-options .speak-btn span {
 	font-size: 20px;
+}
+
+.main-section .wpm-field .txt-input-num {
+	padding: 0;
+    border: none;
+    width: 51px;
+    height: 24px;
+    text-align: center;
+    border-radius: 0px;
+    border-bottom: 2px solid #e6e6e6;
+    color: #212529;
+    font-weight: 500;
+    outline: none;
+    box-shadow: none;
+	color: #007bff;
+	font-size: 19px;
+	transition: all 0.25s ease-in-out;
+}
+
+.main-section .wpm-field .txt-input-num:focus {
+	border-color: #007bff;
+}
+
+.main-section .wpm-field .word-speed {
+	font-size: 14px;
 }
 
 @media only screen and (max-width: 500px) {

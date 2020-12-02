@@ -29,6 +29,7 @@
             letterTimer: 0,
             startAnim: false,
             chunkSize: 1,
+            wpm: 1,
             activeArrow: false,
             currTime: 0,
             currIndex: 0,
@@ -45,7 +46,9 @@
             sliderArr: [],
             storeIndex: 0,
             stopBtn: false,
-            speakSpeed: 1
+            speakSpeed: 1,
+            wpmInput: false,
+            storeTimePlay: 1
         },
 
         // Layout
@@ -59,11 +62,17 @@
                 container.style.minHeight = window.innerHeight + 'px';
             });
 
+            // Set WPM input value
+            wordNum.value = 1;
+
             // On type
             inputTxt.addEventListener('input', this.splitTxt);
 
             // On arrow click
             arrowGroup.addEventListener('click', this.arrowFun);
+
+            // On WPM input type
+            wordNum.addEventListener('input', this.wpmInputFun);
 
             // On click on Start btn
             startBtn.addEventListener('click', this.startAnimation);
@@ -107,13 +116,18 @@
                     }
                 });
 
+                // Set WPM input value
+                wordNum.value = newArr.length;
+
                 // Store values
                 txtReader.status.txtSplit = newArr;
+                txtReader.status.wpm = newArr.length;
                 txtReader.status.wordNum = newArr.length;
-                txtReader.status.timer = (6000 * Number(timerLen.textContent));
+                txtReader.status.timer = (6000 * txtReader.status.storeTimePlay);
                 txtReader.status.letterTimer = txtReader.status.timer / (txtReader.status.lettersNum - txtReader.status.fword);
-                // Calculate wpm
-                wordNum.textContent = newArr.length;
+
+                // Calculate play time
+                txtReader.wpmPlayTime();
                 
                 // active / disable start button
                 if (newArr.length > 1 && startBtn.classList.contains('disabled')) {
@@ -212,6 +226,24 @@
 
             }
 
+            // WPM - Plus btn
+            else if (btn && field.classList.contains('wpm-field') && btn.classList.contains('btn-plus')) {
+
+                // Insert Value
+                txtReader.arrowsInsertVal(true, field, 1, 1, 100000);
+                txtReader.status.curArrow = ['wpm', 'minus'];
+
+            }
+
+            // WPM - Minus btn
+            else if (btn && field.classList.contains('wpm-field') && btn.classList.contains('btn-minus')) {
+
+                // Insert Value
+                txtReader.arrowsInsertVal(false, field, 1, 1, 100000);
+                txtReader.status.curArrow = ['wpm', 'plus'];
+
+            }
+
             // Timer - Plus btn
             else if (btn && field.classList.contains('timer-field') && btn.classList.contains('btn-plus')) {
 
@@ -235,33 +267,42 @@
         // Arrows - Insert value
         arrowsInsertVal: function(status, field, counter, min, max) {
             let valTxt = field.querySelector('.txt-num'),
-                val    = Number(valTxt.textContent);
+                val, input = false;
+
+            if (!valTxt) {
+                input = true;
+                valTxt = field.querySelector('.txt-input-num');
+                val = Number(valTxt.value);
+            } else {
+                val = Number(valTxt.textContent);
+            }
 
             if (!counter) {
                 counter = 1;
             }
 
-            if (val <= 0.5 && !status || val < 0.5 && status) {
-                counter = 0.1;
-            }
-
             if (status && val < max) { // Plus
                 let valNum = val + counter;
-                if (counter <= 0.5) {
+
+                if (counter < 0.5 && counter > 0) {
                     valNum = Number(valNum.toFixed(2));
                 }
-                valTxt.textContent = valNum;
+
+                input ? valTxt.value = valNum : valTxt.textContent = valNum;
                 txtReader.changeArrowOption(field, valTxt);
 
             } else if (!status && val > min) { // Minus
                 let valNum = val - counter;
-                if (counter <= 0.5) {
+
+                if (counter < 0.5 && counter > 0) {
                     valNum = Number(valNum.toFixed(2));
                 }
-                valTxt.textContent = valNum;
+
+                input ? valTxt.value = valNum : valTxt.textContent = valNum;
                 txtReader.changeArrowOption(field, valTxt);
 
             }
+
         },
 
         // Change timer & chunk size
@@ -270,18 +311,87 @@
             if (field.classList.contains('wordcount-field')) {
                 // Chunk size
                 txtReader.status.chunkSize = Number(valTxt.textContent);
-		arrowGroup.querySelector('.wpm-field .word-speed').textContent = 'x' + valTxt.textContent;
+                arrowGroup.querySelector('.wpm-field .word-speed').textContent = 'x' + valTxt.textContent;
             } else if (field.classList.contains('timer-field')) {
                 // timer
-                txtReader.status.timer = 6000 * Number(valTxt.textContent);
+                txtReader.status.timer = 6000 * txtReader.status.storeTimePlay;
+            } else if (field.classList.contains('wpm-field')) {
+                // WPM
+                txtReader.status.wpm = Number(valTxt.value);
+                // Calculate play time
+                txtReader.wpmPlayTime();
             }
+
             // Active arrow
             txtReader.status.activeArrow = true;
             txtReader.status.stopAnim = true;
+
             // Check if stop button clicked then update txtreader
             if (txtReader.status.startAnim && txtReader.status.stopBtn) {
                 txtReader.insertWordsFun();
             }
+        },
+
+        // WPM Input
+        wpmInputFun: function() {
+            // Check if animation working then stop
+            if (txtReader.status.startAnim && !txtReader.status.stopAnim && !txtReader.status.stopBtn) {
+                txtReader.stopAnimFun();
+                txtReader.status.wpmInput = true;
+                // Reset Time
+                txtReader.status.resetTime = true;
+                // Reset Time
+                txtReader.status.activeArrow = true;
+                txtReader.status.curArrow = ['wpm', 'minus'];
+            }
+
+            // Filter value
+            if (/^\d+$/g.test(this.value)) {
+                // Store WPM value
+                txtReader.status.wpm = Number(wordNum.value);
+                // Calculate play time
+                txtReader.wpmPlayTime();
+            } else if (this.value.trim() !== '' || this.value != 0) {
+                this.value = this.value.slice(0, this.value.length - 1);
+            } else {
+                this.value = 1;
+                txtReader.status.wpm = 1;
+                // Calculate play time
+                txtReader.wpmPlayTime();
+            }
+
+        },
+
+        // Calculate play time
+        wpmPlayTime: function() {
+            let num = txtReader.status.wordNum / txtReader.status.wpm,
+                num2 = txtReader.status.wordNum % txtReader.status.wpm;
+
+            if (num2 !== 0) {
+                num = num.toFixed(1);
+            }
+
+            if (num == 0) {
+                num = 6;
+                arrowGroup.querySelector('.word-speed').textContent = 'sec';
+                timerLen.classList.add('sec-counter');
+                txtReader.status.storeTimePlay = 0.1;
+            } else if (num < 1) {
+                num = (num * 6000) / 100;
+                arrowGroup.querySelector('.word-speed').textContent = 'sec';
+                timerLen.classList.add('sec-counter');
+                txtReader.status.storeTimePlay = (num * 100) / 6000;
+            } else if (num >= 1) {
+                timerLen.classList.remove('sec-counter');
+                arrowGroup.querySelector('.word-speed').textContent = 'min';
+                txtReader.status.storeTimePlay = num;
+            }
+
+            // Insert time
+            timerLen.textContent = num;
+
+            // Store time
+            txtReader.status.timer = 6000 * txtReader.status.storeTimePlay;
         },
 
         // Start Animation
@@ -305,7 +415,7 @@
                     txtReader.status.startAnim = true;
                     txtReader.status.activeArrow = false;
                     txtReader.status.stopAnim = false;
-                    txtReader.splitTxt();
+                    //txtReader.splitTxt();
                     // Call Animation function
                     txtReader.getWords(true);
                 });
@@ -392,18 +502,19 @@
 
             // On click on arrows
             if (this.status.activeArrow) {
-                // Increase Index on click minus arrow
-                //if (txtReader.status.curArrow[1] === 'minus') {
-                    //this.status.currIndex += 1;
-                //}
+
                 this.status.activeArrow = false;
+                this.status.wpmInput = false;
                 // Get previous word & time
                 for (let i = 0; i < this.status.resetWordsArr.length; i++) {
-                    if (this.status.resetWordsArr[i][2][0] === this.status.currIndex) {
-                        wordDisplay.innerHTML = this.status.resetWordsArr[i][1];
+                    if (this.status.resetWordsArr[i + 1] && this.status.resetWordsArr[i + 1][0] > this.status.currTime || i + 1 === this.status.resetWordsArr.length) {
+                        let txt = this.status.resetWordsArr[i][1],
+                            ttime = this.status.resetWordsArr[i][0];
+
+                        wordDisplay.innerHTML = txt;
 
                         if (txtReader.status.curArrow[1] === 'minus') {
-                            this.status.currTime = this.status.resetWordsArr[i][0]
+                            this.status.currTime = ttime;
                         }
 
                         // Speak word Callback
@@ -481,7 +592,7 @@
                 $(slider).slider( "option", "step", sliderStep );
 
             function frame() {
-                if (!txtReader.status.stopAnim && txtReader.status.newTxtSplit[txtReader.status.currTime] && txtReader.status.currTime <= txtReader.status.timer) {
+                if (!txtReader.status.stopAnim && !txtReader.status.wpmInput && txtReader.status.newTxtSplit[txtReader.status.currTime] && txtReader.status.currTime <= txtReader.status.timer) {
                     // Insert Timer
                     if (txtReader.status.newTxtSplit[txtReader.status.currTime][1] !== null) {
                         btmTimer.textContent = txtReader.status.newTxtSplit[txtReader.status.currTime][1];
@@ -508,7 +619,7 @@
 
                 } else {
                     // Options arrows clicked
-                    if (txtReader.status.stopAnim && txtReader.status.activeArrow) {
+                    if (txtReader.status.wpmInput || txtReader.status.stopAnim && txtReader.status.activeArrow) {
                         
                         txtReader.status.currIndex = txtReader.status.storeIndex;
                         
@@ -528,6 +639,10 @@
                             txtReader.status.resetTime = true;
                         }
                         txtReader.getWords();
+                    }
+                    // Replay btn
+                    if (txtReader.status.currTime >= txtReader.status.timer) {
+                        txtReader.replayFun();
                     }
                     // Stop Animation
                     clearInterval(anim);
@@ -581,24 +696,45 @@
 
         // Stop btn
         stopAnimFun: function() {
-            if (!this.classList.contains('active')) {
+            if (!stopBtn.classList.contains('active') && !stopBtn.classList.contains('replay')) {
+                // Continue
                 txtReader.status.stopAnim = true;
-                this.classList.add('active');
-                this.textContent = 'Continue';
-				this.classList.add('btn-primary');
-                this.classList.remove('btn-danger');
+                stopBtn.classList.add('active');
+                stopBtn.textContent = 'Continue';
+				stopBtn.classList.add('btn-primary');
+                stopBtn.classList.remove('btn-danger');
                 txtReader.status.stopBtn = true;
-            } else {
+            } else if (!stopBtn.classList.contains('replay')) {
+                // Stop
                 txtReader.status.stopAnim = false;
-                this.classList.remove('active');
-                this.textContent = 'Stop';
-				this.classList.add('btn-danger');
-                this.classList.remove('btn-primary');
+                stopBtn.classList.remove('active');
+                stopBtn.textContent = 'Stop';
+				stopBtn.classList.add('btn-danger');
+                stopBtn.classList.remove('btn-primary');
                 txtReader.status.sliderTime = txtReader.status.currTime;
                 txtReader.status.stopBtn = false;
                 // Continue Animation
                 txtReader.insertWordsFun();
+            } else if (stopBtn.classList.contains('replay')) {
+                // Replay
+                txtReader.status.stopBtn = false;
+                txtReader.status.stopAnim = false;
+                stopBtn.classList.remove('replay');
+                stopBtn.classList.remove('btn-primary');
+                stopBtn.classList.add('btn-danger');
+                stopBtn.textContent = 'Stop';
+                txtReader.getWords();
             }
+        },
+
+        // Replay button
+        replayFun: function() {
+            stopBtn.classList.add('replay');
+            stopBtn.textContent = 'Replay';
+            stopBtn.classList.remove('btn-danger');
+            stopBtn.classList.add('btn-primary');
+            txtReader.status.currIndex = 0;
+            txtReader.status.currTime = 0;
         },
 
         // Speak Word Callback
