@@ -14,7 +14,8 @@
             btmOptions  = container.querySelector('.btm-options'),
             stopBtn     = container.querySelector('.stop-btn'),
             btmTimer    = container.querySelector('.timer'),
-            speakBtn    = container.querySelector('.speak-btn');
+            speakBtn    = container.querySelector('.speak-btn'),
+            selectVoice = container.querySelector('.sound-select');
 
     // *** Global TxtReader Functions ***
     const txtReader = {
@@ -48,7 +49,9 @@
             stopBtn: false,
             speakSpeed: 1,
             wpmInput: false,
-            storeTimePlay: 1
+            storeTimePlay: 1,
+            voicesList: [],
+            voice: null
         },
 
         // Layout
@@ -57,9 +60,23 @@
             // Window full height
             container.style.minHeight = window.innerHeight + 'px';
 
+            // Add Voices
+            speechSynthesis.addEventListener('voiceschanged', txtReader.addVoices);
+
             // On window Resize
             window.addEventListener('resize', function() {
                 container.style.minHeight = window.innerHeight + 'px';
+            });
+
+            // On window click
+            window.addEventListener('click', function(e) {
+                // Hide Voice Select Drop List
+                if (!e.target.closest('.voice-drop-list') && selectVoice.classList.contains('active')) {
+                    selectVoice.classList.remove('active');
+                    setTimeout(function() {
+                        selectVoice.querySelector('.drop-list').classList.remove('d-block');
+                    }, 200);
+                }
             });
 
             // Set WPM input value
@@ -82,6 +99,9 @@
 
             // On click Speak btn
             speakBtn.addEventListener('click', this.speakBtnFun);
+
+            // On click on Select Voice btn
+            selectVoice.addEventListener('click', this.selectVoiceFun);
 
         },
 
@@ -666,9 +686,11 @@
                 txtReader.SpeakWord();
             }
 
-            // Continue animation
-            txtReader.status.stopAnim = false;
-            txtReader.insertWordsFun();
+            if (!txtReader.status.stopBtn) {
+                // Continue animation
+                txtReader.status.stopAnim = false;
+                txtReader.insertWordsFun();
+            }
         },
 
         // Callback on slider start/click
@@ -745,6 +767,8 @@
                 // Speak
                 let utterance = new SpeechSynthesisUtterance(word);
                 utterance.rate = txtReader.status.speakSpeed;
+                console.log(txtReader.status.voice)
+                utterance.voice = txtReader.status.voice;
                 speechSynthesis.speak(utterance);
             }
 
@@ -789,11 +813,66 @@
             } else if (num <= 80 && num > 70) {
                 txtReader.status.speakSpeed = 5;
             } else if (num <= 70 && num > 60) {
-                txtReader.status.speakSpeed = 6;
+                txtReader.status.speakSpeed = 5.5;
             } else if (num <= 60 && num > 50) {
-                txtReader.status.speakSpeed = 8;
+                txtReader.status.speakSpeed = 6;
             } else if (num <= 50){
-                txtReader.status.speakSpeed = 10;
+                txtReader.status.speakSpeed = 8;
+            }
+        },
+
+        // Add Voices
+        addVoices: function() {
+            let synth    = window.speechSynthesis,
+                voices   = synth.getVoices(),
+                dropList = selectVoice.querySelector('.drop-list');
+            for (let i = 0; i < voices.length; i++) {
+                let div = document.createElement('div');
+                div.className = 'item';
+                div.textContent = '(' + voices[i].lang.slice(-2) + ')';
+                dropList.appendChild(div);
+                // Store voices list
+                txtReader.status.voicesList.push(voices[i]);
+            }
+
+            // add first voice
+            selectVoice.querySelector('button .txt').textContent = '(' + txtReader.status.voicesList[0].lang.slice(-2) + ')';
+
+            // Store voice
+            txtReader.status.voice = txtReader.status.voicesList[0];
+        },
+
+        // Select Voice btn
+        selectVoiceFun: function(e) {
+            // On click on btn
+            if (e.target.closest('button')) {
+
+                if (!selectVoice.classList.contains('active')) { // Show
+                    selectVoice.querySelector('.drop-list').classList.add('d-block');
+                    setTimeout(function() {
+                        selectVoice.classList.add('active');
+                    }, 5);
+                } else { // Hide
+                    selectVoice.classList.remove('active');
+                    setTimeout(function() {
+                        selectVoice.querySelector('.drop-list').classList.remove('d-block');
+                    }, 200);
+                }
+
+            } else if (e.target.closest('.item')) { // On click on item
+                let index = Array.from(selectVoice.querySelectorAll('.drop-list .item')).indexOf(e.target.closest('.item'));
+
+                // Insert Lang
+                this.querySelector('button .txt').textContent = e.target.closest('.item').textContent;
+
+                // Store voice
+                txtReader.status.voice = txtReader.status.voicesList[index];
+
+                // Hide droplist
+                selectVoice.classList.remove('active');
+                setTimeout(function() {
+                    selectVoice.querySelector('.drop-list').classList.remove('d-block');
+                }, 200);
             }
         },
 

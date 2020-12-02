@@ -87,10 +87,21 @@
                             <!-- Bottom form options -->
                             <div class="form-group mb-0 text-center pt-3 btm-options">
                                 <button type="button" class="btn btn-danger stop-btn">Stop</button>
-                                <button type="button" class="btn btn-secondary speak-btn">
-                                    <span class="speak"><i class="fas fa-volume-up"></i></span>
-                                    <span class="mute"><i class="fas fa-volume-mute"></i></span>
-                                </button>
+                                <div class="sound-btn-container d-flex align-items-center">
+                                    <button type="button" class="btn btn-secondary speak-btn">
+                                        <span class="speak"><i class="fas fa-volume-up"></i></span>
+                                        <span class="mute"><i class="fas fa-volume-mute"></i></span>
+                                    </button>
+                                    <div class="sound-select position-relative">
+                                        <button class="btn light-btn" type="button">
+                                            <span class="icon"><i class="fas fa-microphone"></i></span>
+                                            <span class="txt"></span>
+                                            <span class="icon"><i class="fas fa-caret-down"></i></span>
+                                        </button>
+                                        <div class="drop-list voice-drop-list user-select-none">
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="timer">00:00</div>
                             </div>
                         </form>
