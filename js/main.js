@@ -139,8 +139,8 @@
                 });
 
                 // Set WPM input value
-                wordNum.value = newArr.length;
-                txtReader.status.wpm = newArr.length;
+                //wordNum.value = newArr.length;
+                //txtReader.status.wpm = newArr.length;
 
                 // Store values
                 txtReader.status.txtSplit = newArr;
@@ -390,7 +390,7 @@
         wpmPlayTime: function() {
             let num = txtReader.status.wordNum / txtReader.status.wpm,
                 num2 = txtReader.status.wordNum % txtReader.status.wpm;
-
+            
             if (num2 !== 0) {
                 num = num.toFixed(1);
             }
@@ -686,7 +686,6 @@
             txtReader.status.sliderArr = txtReader.status.newTxtSplit.slice(txtReader.status.currTime, txtReader.status.newTxtSplit.length);
             word = txtReader.getPrevWord();
             
-            //return false;
             if (word) {
                 wordDisplay.innerHTML = word;
                 txtReader.SpeakWord();

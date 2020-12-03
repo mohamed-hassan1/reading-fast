@@ -174,9 +174,10 @@
 body {
     font-family: 'Roboto', sans-serif;
 }
+
 .btn, .btn:active, .btn:focus {
-    box-shadow: none;
-    outline: none;
+	box-shadow: none;
+	cursor: pointer;
 }
 
 .btn.disabled {
@@ -352,14 +353,6 @@ body {
     overflow-y: auto;
 	transition: all 0.2s ease-in-out;
 }
-
-input, input:before, input:after {
-	-webkit-user-select: initial;
-	-khtml-user-select: initial;
-	-moz-user-select: initial;
-	-ms-user-select: initial;
-	user-select: initial;
-} 
 
 .main-section .sound-select.active .drop-list {
 	display: block;
