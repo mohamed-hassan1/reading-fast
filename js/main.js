@@ -20,6 +20,9 @@
     // *** Global TxtReader Functions ***
     const txtReader = {
 
+        // Text Variable
+        txt: null,
+
         // Status
         status: {
             lettersNum: 0,
@@ -554,7 +557,7 @@
             this.status.newTxtSplit = arr;
             this.status.sliderTime = this.status.currTime;
             // Check if stop button clicked
-            if (!this.status.stopBtn) {
+            if (!this.status.stopBtn && !this.status.stopAnim) {
                 let medNum;
                 if (this.status.resetWordsArr.length > 2) {
                     medNum = this.status.resetWordsArr[this.status.resetWordsArr.length - 1][0] - this.status.resetWordsArr[this.status.resetWordsArr.length - 2][0];
@@ -643,6 +646,7 @@
                     
                     // Options arrows clicked
                     if (txtReader.status.wpmInput || txtReader.status.stopAnim && txtReader.status.activeArrow) {
+
                         
                         txtReader.status.currIndex = txtReader.status.storeIndex;
                         
@@ -680,12 +684,12 @@
         // Callback on slider stop
         sliderStopCallback: function() {
             let word;
+            txtReader.getWords();
             // Get words & time
             txtReader.status.currTime = parseInt(($(slider).slider('value') / 100) * txtReader.status.timer);
             txtReader.status.sliderTime = txtReader.status.currTime;
             txtReader.status.sliderArr = txtReader.status.newTxtSplit.slice(txtReader.status.currTime, txtReader.status.newTxtSplit.length);
             word = txtReader.getPrevWord();
-            
             if (word) {
                 wordDisplay.innerHTML = word;
                 txtReader.SpeakWord();
